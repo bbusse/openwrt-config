@@ -1,6 +1,6 @@
 #
 # ALFA Network AP120C (Atheros AR9344, 128 MB RAM, 16 MB NOR)
-# Target ath79/generic, built from the "ap120c" branch of bbusse/openwrt
+# Target ath79/generic, built from the "openwrt-25.12" branch of bbusse/openwrt
 # (openwrt-25.12 + device port). See openwrt-build/docs/ap120c.md.
 #
 # Generated with "make defconfig" from this seed:
@@ -11,7 +11,8 @@
 #   CONFIG_TARGET_ROOTFS_INITRAMFS=y          (TFTP-bootable test image)
 #   CONFIG_TARGET_INITRAMFS_COMPRESSION_LZMA=y
 #   # CONFIG_PACKAGE_wpad-basic-mbedtls is not set
-#   CONFIG_PACKAGE_wpad=y                     (full hostapd, as on x86_64)
+#   CONFIG_PACKAGE_wpad-mbedtls=y             (full hostapd with mbedTLS: WPA3/SAE,
+#                                              OWE, 802.11r, mesh; plain "wpad" has no SAE)
 #   CONFIG_PACKAGE_iw=y
 #   (no CONFIG_PACKAGE_iwinfo: on 25.12 wifi-scripts already provides the
 #    iwinfo command, and the placeholder iwinfo package has a broken
@@ -3978,12 +3979,12 @@ CONFIG_WPA_MBO_SUPPORT=y
 # CONFIG_PACKAGE_wpa-supplicant-openssl is not set
 # CONFIG_PACKAGE_wpa-supplicant-p2p is not set
 # CONFIG_PACKAGE_wpa-supplicant-wolfssl is not set
-CONFIG_PACKAGE_wpad=y
+# CONFIG_PACKAGE_wpad is not set
 # CONFIG_PACKAGE_wpad-basic is not set
 # CONFIG_PACKAGE_wpad-basic-mbedtls is not set
 # CONFIG_PACKAGE_wpad-basic-openssl is not set
 # CONFIG_PACKAGE_wpad-basic-wolfssl is not set
-# CONFIG_PACKAGE_wpad-mbedtls is not set
+CONFIG_PACKAGE_wpad-mbedtls=y
 # CONFIG_PACKAGE_wpad-mesh-mbedtls is not set
 # CONFIG_PACKAGE_wpad-mesh-openssl is not set
 # CONFIG_PACKAGE_wpad-mesh-wolfssl is not set
