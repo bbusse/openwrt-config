@@ -1,0 +1,25 @@
+# BeagleBone Black, TI AM3358 (omap/generic). Partial config, image-builder
+# runs make defconfig against the tree, so only what differs from the
+# defaults is listed. The device profile pulls in U-Boot (MLO, u-boot.img)
+# and the sdcard image: an MBR with a FAT boot partition and an ext4 or
+# squashfs root. No radio on the Black, so no wpad. Serial console on J1
+# at 115200, eth0 is lan at 192.168.1.1
+CONFIG_TARGET_omap=y
+CONFIG_TARGET_omap_generic=y
+CONFIG_TARGET_omap_generic_DEVICE_ti_am335x-bone-black=y
+CONFIG_TARGET_ROOTFS_EXT4FS=y
+CONFIG_TARGET_ROOTFS_SQUASHFS=y
+CONFIG_TARGET_ROOTFS_TARGZ=y
+CONFIG_TARGET_IMAGES_GZIP=y
+CONFIG_OMAP_SD_BOOT_PARTSIZE=32
+CONFIG_TARGET_ROOTFS_PARTSIZE=104
+CONFIG_SIGNED_PACKAGES=y
+CONFIG_SIGNATURE_CHECK=y
+CONFIG_PACKAGE_dropbear=y
+CONFIG_PACKAGE_kmod-fs-vfat=y
+CONFIG_PACKAGE_kmod-usb-storage=y
+CONFIG_PACKAGE_kmod-usb-hid=y
+CONFIG_PACKAGE_kmod-tun=y
+CONFIG_PACKAGE_kmod-veth=y
+CONFIG_PACKAGE_kmod-wireguard=y
+CONFIG_PACKAGE_wireguard-tools=y
