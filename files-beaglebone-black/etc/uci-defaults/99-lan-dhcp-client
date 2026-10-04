@@ -1,0 +1,23 @@
+#!/bin/sh
+# Join the existing network as a DHCP client
+
+uci set network.lan.proto='dhcp'
+uci -q delete network.lan.ipaddr
+uci -q delete network.lan.netmask
+uci -q delete network.lan.ip6assign
+uci set network.lan6='interface'
+uci set network.lan6.device='@lan'
+uci set network.lan6.proto='dhcpv6'
+uci commit network
+
+# ignore stops dnsmasq, odhcpd also needs each of its servers off
+uci set dhcp.lan.ignore='1'
+uci set dhcp.lan.dhcpv4='disabled'
+uci set dhcp.lan.dhcpv6='disabled'
+uci set dhcp.lan.ra='disabled'
+uci commit dhcp
+
+uci set system.@system[0].hostname='beaglebone'
+uci commit system
+
+exit 0
