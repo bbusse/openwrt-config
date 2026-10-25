@@ -22,6 +22,14 @@
 #   CONFIG_PACKAGE_kmod-vxlan=y
 #   CONFIG_PACKAGE_vxlan=y
 #   CONFIG_PACKAGE_uboot-envtools=y           (fw_setenv for bootcmd)
+#   CONFIG_PACKAGE_luci-ssl=y                 (LuCI on uhttpd over https)
+#   CONFIG_PACKAGE_luci-proto-wireguard=y     (WireGuard interfaces in LuCI)
+#   CONFIG_PACKAGE_lighttpd=y                 (first-boot provisioning endpoint
+#   CONFIG_PACKAGE_lighttpd-mod-cgi=y          on 8443 with client certificates,
+#   CONFIG_PACKAGE_lighttpd-mod-wolfssl=y      see files-<flavour>; mod-mbedtls
+#                                              segfaults once client certificates
+#                                              are verified)
+#   CONFIG_PACKAGE_umdns=y                    (advertises _provision._tcp, see files-<flavour>)
 #
 #
 # Automatically generated file; DO NOT EDIT.
@@ -2107,7 +2115,7 @@ CONFIG_PACKAGE_procd-ujail=y
 # CONFIG_PACKAGE_qosify is not set
 # CONFIG_PACKAGE_refpolicy is not set
 # CONFIG_PACKAGE_resolveip is not set
-# CONFIG_PACKAGE_rpcd is not set
+CONFIG_PACKAGE_rpcd=y
 # CONFIG_PACKAGE_selinux-policy is not set
 # CONFIG_PACKAGE_snapshot-tool is not set
 CONFIG_PACKAGE_swconfig=y
@@ -3642,7 +3650,7 @@ CONFIG_MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_PSK_EPHEMERAL_ENABLED=y
 CONFIG_MBEDTLS_ENTROPY_FORCE_SHA256=y
 # CONFIG_MBEDTLS_SSL_RENEGOTIATION is not set
 # CONFIG_PACKAGE_libopenssl is not set
-# CONFIG_PACKAGE_libwolfssl is not set
+CONFIG_PACKAGE_libwolfssl=y
 
 #
 # wolfSSL Library Configuration
@@ -3939,7 +3947,7 @@ CONFIG_PACKAGE_wireguard-tools=y
 #
 # Web Servers/Proxies
 #
-# CONFIG_PACKAGE_uhttpd is not set
+CONFIG_PACKAGE_uhttpd=y
 # end of Web Servers/Proxies
 
 #
@@ -4032,7 +4040,7 @@ CONFIG_PACKAGE_ppp-mod-pppoe=y
 # CONFIG_PACKAGE_tcpdump is not set
 # CONFIG_PACKAGE_tcpdump-mini is not set
 CONFIG_PACKAGE_uclient-fetch=y
-# CONFIG_PACKAGE_umdns is not set
+CONFIG_PACKAGE_umdns=y
 # CONFIG_PACKAGE_unet-cli is not set
 # CONFIG_PACKAGE_unetd is not set
 # CONFIG_PACKAGE_ustp is not set
@@ -4082,7 +4090,7 @@ CONFIG_PACKAGE_uboot-envtools=y
 #
 # Encryption
 #
-# CONFIG_PACKAGE_px5g-mbedtls is not set
+CONFIG_PACKAGE_px5g-mbedtls=y
 # CONFIG_PACKAGE_px5g-standalone is not set
 # CONFIG_PACKAGE_px5g-wolfssl is not set
 # end of Encryption
@@ -4243,3 +4251,9 @@ CONFIG_STRACE_NONE=y
 # CONFIG_PACKAGE_wdctl is not set
 # CONFIG_PACKAGE_whereis is not set
 # end of Utilities
+CONFIG_PACKAGE_luci-ssl=y
+CONFIG_PACKAGE_luci-proto-wireguard=y
+CONFIG_PACKAGE_lighttpd=y
+CONFIG_PACKAGE_lighttpd-mod-cgi=y
+CONFIG_PACKAGE_lighttpd-mod-wolfssl=y
+

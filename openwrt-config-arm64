@@ -32,6 +32,7 @@
 #   CONFIG_PACKAGE_kmod-usb-hid=y
 #   (MAC80211_MESH from x86_64 is unavailable here: no wifi driver selects
 #    mac80211; add a kmod-<wifi> and the option together if needed)
+#   CONFIG_PACKAGE_umdns=y                    (mDNS responder, e.g. for _provision._tcp)
 #
 #
 # Automatically generated file; DO NOT EDIT.
@@ -3660,7 +3661,7 @@ CONFIG_PACKAGE_ppp-mod-pppoe=y
 # CONFIG_PACKAGE_tcpdump is not set
 # CONFIG_PACKAGE_tcpdump-mini is not set
 CONFIG_PACKAGE_uclient-fetch=y
-# CONFIG_PACKAGE_umdns is not set
+CONFIG_PACKAGE_umdns=y
 # CONFIG_PACKAGE_unet-cli is not set
 # CONFIG_PACKAGE_unetd is not set
 # CONFIG_PACKAGE_ustp is not set
