@@ -1,10 +1,12 @@
 #!/bin/sh
 # Pull the router's provisioning files from the repository named in
 # /etc/config/provision, or take them from a copy of it on the router (path),
-# and install them: router/ (the CGI, lighttpd's and umdns' configuration) and
-# devices/*.cms and *.toml, which replace /etc/provision. Runs at boot and from cron,
-# restarts only what changed. When the repository cannot be had it keeps the
-# current files and exits 0; only a file it cannot install is an error
+# and install them: router/ (the server's files and umdns' configuration) and
+# devices/*.cms and *.toml, which replace /etc/provision. The server is provisioner
+# when the image has /usr/sbin/provisioner, lighttpd with the CGI otherwise.
+# Runs at boot and from cron, restarts only what changed. When the repository
+# cannot be had it keeps the current files and exits 0; only a file it cannot
+# install is an error
 root="${PROVISION_ROOT:-}"
 
 log() {
@@ -77,14 +79,18 @@ put() {
     fi
 }
 
-put "${src}/router/www-provision/cgi-bin/provision" /www-provision/cgi-bin/provision 0755 root:root
-conf="${src}/router/etc/lighttpd/lighttpd.conf"
-if [ -f "${conf}" ] && ! cmp -s "${conf}" "${root}/etc/lighttpd/lighttpd.conf" &&
-    ! lighttpd -tt -f "${conf}" >/dev/null 2>&1; then
-    log "router/etc/lighttpd/lighttpd.conf does not load, keeping the current one"
-    rc=1
+if [ -x "${root}/usr/sbin/provisioner" ]; then
+    put "${src}/router/etc/init.d/provisioner" /etc/init.d/provisioner 0755 root:root
 else
-    put "${conf}" /etc/lighttpd/lighttpd.conf 0644 root:root
+    put "${src}/router/www-provision/cgi-bin/provision" /www-provision/cgi-bin/provision 0755 root:root
+    conf="${src}/router/etc/lighttpd/lighttpd.conf"
+    if [ -f "${conf}" ] && ! cmp -s "${conf}" "${root}/etc/lighttpd/lighttpd.conf" &&
+        ! lighttpd -tt -f "${conf}" >/dev/null 2>&1; then
+        log "router/etc/lighttpd/lighttpd.conf does not load, keeping the current one"
+        rc=1
+    else
+        put "${conf}" /etc/lighttpd/lighttpd.conf 0644 root:root
+    fi
 fi
 put "${src}/router/etc/umdns/provision.json" /etc/umdns/provision.json 0644 root:root
 
@@ -109,6 +115,14 @@ for f in "${root}"/etc/provision/*.cms "${root}"/etc/provision/*.toml; do
 done
 
 case "${changed}" in
+*/etc/init.d/provisioner*)
+    if [ -x "${root}/etc/init.d/lighttpd" ]; then
+        "${root}/etc/init.d/lighttpd" disable
+        "${root}/etc/init.d/lighttpd" stop
+    fi
+    "${root}/etc/init.d/provisioner" enable
+    "${root}/etc/init.d/provisioner" restart
+    ;;
 */etc/lighttpd/*)
     "${root}/etc/init.d/lighttpd" enable
     "${root}/etc/init.d/lighttpd" restart

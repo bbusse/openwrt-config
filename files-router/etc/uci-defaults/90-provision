@@ -1,10 +1,25 @@
 #!/bin/sh
-# Device files and lighttpd's client CA live here, readable by lighttpd only.
-# lighttpd stays off until provision-pull has brought its configuration
+# Device files and the client CA live here, readable by the server only: provisioner,
+# which runs as http:www-data, when the image has it, lighttpd otherwise.
+# provisioner's init script comes with provision-pull and is kept across
+# sysupgrade, so it is enabled again here. lighttpd stays off until
+# provision-pull has brought its configuration
 
+. /lib/functions.sh
+
+user_exists http || user_add http 80 "$(group_add_next www-data)"
 mkdir -p /etc/provision
 chown root:www-data /etc/provision
 chmod 0750 /etc/provision
-grep -q '/www-provision' /etc/lighttpd/lighttpd.conf 2>/dev/null || /etc/init.d/lighttpd disable
+if [ -f /etc/lighttpd/server.key ]; then
+    chown root:www-data /etc/lighttpd/server.key
+    chmod 0640 /etc/lighttpd/server.key
+fi
+if [ -x /usr/sbin/provisioner ]; then
+    [ -x /etc/init.d/lighttpd ] && /etc/init.d/lighttpd disable
+    [ -x /etc/init.d/provisioner ] && /etc/init.d/provisioner enable
+else
+    grep -q '/www-provision' /etc/lighttpd/lighttpd.conf 2>/dev/null || /etc/init.d/lighttpd disable
+fi
 /etc/init.d/provision-pull enable
 exit 0
