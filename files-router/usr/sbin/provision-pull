@@ -1,0 +1,126 @@
+#!/bin/sh
+# Pull the router's provisioning files from the repository named in
+# /etc/config/provision, or take them from a copy of it on the router (path),
+# and install them: router/ (the CGI, lighttpd's and umdns' configuration) and
+# devices/*.cms and *.toml, which replace /etc/provision. Runs at boot and from cron,
+# restarts only what changed. When the repository cannot be had it keeps the
+# current files and exits 0; only a file it cannot install is an error
+root="${PROVISION_ROOT:-}"
+
+log() {
+    logger -t provision-pull "$*"
+    echo "provision-pull: $*" >&2
+}
+
+path="$(uci -q get provision.main.path)"
+repo="$(uci -q get provision.main.repo)"
+ref="$(uci -q get provision.main.ref)"
+archive="$(uci -q get provision.main.archive)"
+token="$(uci -q get provision.main.token)"
+ref="${ref:-main}"
+
+keep() {
+    log "$*, keeping the current files"
+    exit 0
+}
+
+if [ -n "${path}" ]; then
+    src="${path}"
+    origin="${path}"
+else
+    if [ -z "${archive}" ]; then
+        case "${repo}" in
+        "")
+            exit 0
+            ;;
+        https://github.com/*/*)
+            slug="${repo#https://github.com/}"
+            slug="${slug%/}"
+            slug="${slug%.git}"
+            archive="https://api.github.com/repos/${slug}/tarball/${ref}"
+            ;;
+        *)
+            keep "cannot tell the archive URL of ${repo}, set provision.main.archive"
+            ;;
+        esac
+    fi
+    origin="${archive}"
+
+    tmp="$(mktemp -d /tmp/provision-pull.XXXXXX)" || keep "no temporary directory"
+    trap 'rm -rf "${tmp}"' EXIT
+
+    set -- -q -O "${tmp}/repo.tar.gz"
+    if [ -n "${token}" ]; then
+        set -- "$@" --header="Authorization: Bearer ${token}"
+    fi
+    uclient-fetch "$@" "${archive}" || keep "could not fetch ${archive}"
+    mkdir "${tmp}/src"
+    tar -xzf "${tmp}/repo.tar.gz" -C "${tmp}/src" || keep "${archive} is not a gzipped tar archive"
+    src="$(find "${tmp}/src" -mindepth 1 -maxdepth 1 -type d | head -n 1)"
+fi
+[ -d "${src}/router" ] || keep "${origin} has no router/"
+
+changed=""
+rc=0
+
+put() {
+    [ -f "${1}" ] || return 0
+    cmp -s "${1}" "${root}${2}" && return 0
+    mkdir -p "$(dirname "${root}${2}")"
+    if cp "${1}" "${root}${2}.new" && chown "${4}" "${root}${2}.new" &&
+        chmod "${3}" "${root}${2}.new" && mv -f "${root}${2}.new" "${root}${2}"; then
+        changed="${changed} ${2}"
+    else
+        rm -f "${root}${2}.new"
+        log "could not install ${2}"
+        rc=1
+    fi
+}
+
+put "${src}/router/www-provision/cgi-bin/provision" /www-provision/cgi-bin/provision 0755 root:root
+conf="${src}/router/etc/lighttpd/lighttpd.conf"
+if [ -f "${conf}" ] && ! cmp -s "${conf}" "${root}/etc/lighttpd/lighttpd.conf" &&
+    ! lighttpd -tt -f "${conf}" >/dev/null 2>&1; then
+    log "router/etc/lighttpd/lighttpd.conf does not load, keeping the current one"
+    rc=1
+else
+    put "${conf}" /etc/lighttpd/lighttpd.conf 0644 root:root
+fi
+put "${src}/router/etc/umdns/provision.json" /etc/umdns/provision.json 0644 root:root
+
+mkdir -p "${root}/etc/provision"
+for f in "${src}"/devices/*.cms "${src}"/devices/*.toml; do
+    [ -f "${f}" ] || continue
+    ext="${f##*.}"
+    name="$(basename "${f}" ".${ext}")"
+    case "${name}" in
+    "" | .* | *[!A-Za-z0-9._-]*)
+        log "skipping ${f##*/}, not a device name"
+        continue
+        ;;
+    esac
+    put "${f}" "/etc/provision/${name}.${ext}" 0640 root:www-data
+done
+for f in "${root}"/etc/provision/*.cms "${root}"/etc/provision/*.toml; do
+    [ -f "${f}" ] || continue
+    if [ ! -f "${src}/devices/${f##*/}" ] && rm -f "${f}"; then
+        changed="${changed} /etc/provision/${f##*/}"
+    fi
+done
+
+case "${changed}" in
+*/etc/lighttpd/*)
+    "${root}/etc/init.d/lighttpd" enable
+    "${root}/etc/init.d/lighttpd" restart
+    ;;
+esac
+case "${changed}" in
+*/etc/umdns/*)
+    "${root}/etc/init.d/umdns" restart
+    ;;
+esac
+
+if [ -n "${changed}" ]; then
+    log "updated${changed}"
+fi
+exit "${rc}"

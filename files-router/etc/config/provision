@@ -1,0 +1,6 @@
+config provision 'main'
+	option path ''
+	option repo ''
+	option ref 'main'
+	option token ''
+	option archive ''

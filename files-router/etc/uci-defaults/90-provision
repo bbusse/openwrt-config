@@ -1,0 +1,10 @@
+#!/bin/sh
+# Device files and lighttpd's client CA live here, readable by lighttpd only.
+# lighttpd stays off until provision-pull has brought its configuration
+
+mkdir -p /etc/provision
+chown root:www-data /etc/provision
+chmod 0750 /etc/provision
+grep -q '/www-provision' /etc/lighttpd/lighttpd.conf 2>/dev/null || /etc/init.d/lighttpd disable
+/etc/init.d/provision-pull enable
+exit 0
