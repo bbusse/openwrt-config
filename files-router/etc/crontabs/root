@@ -1,1 +1,1 @@
-*/15 * * * * /usr/sbin/provision-pull
+*/15 * * * * /usr/sbin/provisioner fetch-profiles

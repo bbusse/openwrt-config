@@ -1,4 +1,5 @@
 config provision 'main'
+	option server 'provisioner'
 	option path ''
 	option repo ''
 	option ref 'main'

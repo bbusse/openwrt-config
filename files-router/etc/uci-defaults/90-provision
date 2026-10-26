@@ -1,10 +1,11 @@
 #!/bin/sh
-# Device files and the client CA live here, readable by the server only: provisioner,
-# which runs as http:www-data, when the image has it, lighttpd otherwise.
-# provisioner's init script comes with provision-pull and is kept across
-# sysupgrade, so it is enabled again here. lighttpd stays off until
-# provision-pull has brought its configuration
+# Device files and the client CA live here, readable by the server only:
+# provisioner router, which runs as http:www-data, or lighttpd, as
+# provision.main.server says. provisioner's init script comes with
+# fetch-profiles and is kept across sysupgrade, so it is enabled again here.
+# lighttpd stays off until fetch-profiles has brought its configuration
 
+# shellcheck source=/dev/null
 . /lib/functions.sh
 
 user_exists http || user_add http 80 "$(group_add_next www-data)"
@@ -15,11 +16,13 @@ if [ -f /etc/lighttpd/server.key ]; then
     chown root:www-data /etc/lighttpd/server.key
     chmod 0640 /etc/lighttpd/server.key
 fi
-if [ -x /usr/sbin/provisioner ]; then
+server="$(uci -q get provision.main.server)"
+if [ "${server:-provisioner}" = provisioner ]; then
     [ -x /etc/init.d/lighttpd ] && /etc/init.d/lighttpd disable
     [ -x /etc/init.d/provisioner ] && /etc/init.d/provisioner enable
 else
     grep -q '/www-provision' /etc/lighttpd/lighttpd.conf 2>/dev/null || /etc/init.d/lighttpd disable
 fi
-/etc/init.d/provision-pull enable
+sed -i 's#/usr/sbin/provision-pull#/usr/sbin/provisioner fetch-profiles#' /etc/crontabs/root 2>/dev/null
+/etc/init.d/fetch-profiles enable
 exit 0
